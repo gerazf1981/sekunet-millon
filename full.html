@@ -321,7 +321,7 @@ function fanfare(){
 }
 
 /* =================== CELEBRACIÓN =================== */
-let celebrated=false, showTimer=null;
+let celebrated=false, showTimer=null, ultimaCelebrada=null;
 function celebrate(){
   if(celebrated) return; celebrated=true;
   document.body.classList.add("won");
@@ -355,7 +355,11 @@ async function tick(){
     for(let i=0;i<5;i++) setTimeout(()=>flyNumber("+"+fmtMoney(total-prev),{size:28,x:innerWidth/2,y:innerHeight*.55}), 600+i*120);
     setTimeout(launch,600);
   }
-  if(total>=CONFIG.HITO) setTimeout(celebrate, 2000);
+  if(total>=CONFIG.HITO && ultimaHora!==ultimaCelebrada){
+    // Cada sincronización después del millón vuelve a lanzar la celebración completa
+    ultimaCelebrada = ultimaHora; celebrated=false; clearInterval(showTimer);
+    setTimeout(celebrate, 2000);
+  }
   if(!DEMO) guardarPrevio(total);
   dot.classList.remove("err");
   st.textContent = DEMO? "Modo demo" : "Sincronizado con Odoo";
