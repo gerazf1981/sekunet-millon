@@ -164,7 +164,7 @@ let shown = "";
 const fmtInt = n => Math.floor(n).toLocaleString("en-US");
 const fmtMoney = n => "$" + n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
 
-function renderCounter(value){
+function renderCounter(value, fly=true){
   const intStr = fmtInt(value);
   const cents = "." + (Math.round((value%1)*100)).toString().padStart(2,"0");
   if(counterEl.children.length === 0 || shown.length !== intStr.length){
@@ -176,6 +176,7 @@ function renderCounter(value){
     [...intStr].forEach((ch,i)=>{
       if(shown[i] !== ch){
         const slot = slots[i];
+        if(!fly){ slot.innerHTML = '<span class="d">'+ch+'</span>'; return; }
         const old = slot.querySelector(".d:not(.out)");
         if(old){ old.className = "d out"; setTimeout(()=>old.remove(),750); }
         const nd = document.createElement("span");
@@ -193,16 +194,17 @@ function renderCounter(value){
 let current = 0, animFrame;
 function animateTo(target, ms=1800){
   cancelAnimationFrame(animFrame);
-  const start = current, t0 = performance.now();
+  const start = current;
+  if(start>0){ current = target; renderCounter(target, true); return; }  // solo vuelan los dígitos que cambian
+  const t0 = performance.now();
   const step = t => {
     const p = Math.min(1,(t-t0)/ms), e = 1-Math.pow(1-p,4);
     const v = start + (target-start)*e;
-    renderCounter(v);
-    if(p<1) animFrame = requestAnimationFrame(step); else { current = target; renderCounter(target); }
+    renderCounter(v, false);
+    if(p<1) animFrame = requestAnimationFrame(step); else { current = target; renderCounter(target, false); }
   };
   animFrame = requestAnimationFrame(step);
 }
-
 function updateUI(total){
   const pct = Math.min(100, total/CONFIG.HITO*100);
   document.getElementById("fill").style.width = pct+"%";
